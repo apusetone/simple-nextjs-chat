@@ -15,11 +15,63 @@ type MessagesPaneProps = {
 export default function MessagesPane(props: MessagesPaneProps) {
   const { chat } = props;
   const [chatMessages, setChatMessages] = React.useState(chat.messages);
-  const [textAreaValue, setTextAreaValue] = React.useState('');
+  const [ws, setWs] = React.useState<WebSocket | null>(null);
+
+  const connectWebSocket = React.useCallback(() => {
+    const socket = new WebSocket(process.env.NEXT_PUBLIC_WS_URL as string);
+    
+    socket.onopen = () => {
+      console.log('WebSocket connection established');
+      setWs(socket);
+    };
+    
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        addMessage({ message: data.message, connection_id: data.connection_id || 'unknown' });
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
+    };
+    
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    socket.onclose = (event) => {
+      console.log('WebSocket connection closed');
+      setWs(null);
+      
+      if (!event.wasClean) {
+        console.log('WebSocket connection lost. Attempting to reconnect...');
+        setTimeout(connectWebSocket, 2000); // 2秒後に再接続を試みる
+      }
+    };
+
+    return socket;
+  }, []);
+
+  React.useEffect(() => {
+    const socket = connectWebSocket();
+    
+    return () => {
+      socket.close();
+    };
+  }, [connectWebSocket]);
 
   React.useEffect(() => {
     setChatMessages(chat.messages);
   }, [chat.messages]);
+
+  const addMessage = React.useCallback((message: { message: string; connection_id: string }) => {
+    const newMessage: MessageProps = {
+      id: (chatMessages.length + 1).toString(),
+      sender: message.connection_id === 'local' ? 'You' : 'Other',
+      content: message.message,
+      timestamp: 'Just now',
+    };
+    setChatMessages((prevMessages) => [...prevMessages, newMessage]);
+  }, [chatMessages]);
 
   return (
     <Sheet
@@ -57,23 +109,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
           })}
         </Stack>
       </Box>
-      <MessageInput
-        textAreaValue={textAreaValue}
-        setTextAreaValue={setTextAreaValue}
-        onSubmit={() => {
-          const newId = chatMessages.length + 1;
-          const newIdString = newId.toString();
-          setChatMessages([
-            ...chatMessages,
-            {
-              id: newIdString,
-              sender: 'You',
-              content: textAreaValue,
-              timestamp: 'Just now',
-            },
-          ]);
-        }}
-      />
+      <MessageInput ws={ws} addMessage={addMessage} />
     </Sheet>
   );
 }

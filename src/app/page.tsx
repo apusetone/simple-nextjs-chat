@@ -8,7 +8,6 @@ import CssBaseline from '@mui/joy/CssBaseline';
 import Box from '@mui/joy/Box';
 import Sheet from '@mui/joy/Sheet';
 import { useChatStore } from './layout';
-import { Message } from '@/stores/chatStore';
 import MessagesPane from '@/components/MessagesPane';
 import MyMessages from '@/components/MyMessages'
 import { ChatProps, MessageProps } from '@/types';

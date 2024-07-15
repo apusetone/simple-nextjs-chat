@@ -5,29 +5,27 @@ import Box from '@mui/joy/Box';
 import Button from '@mui/joy/Button';
 import FormControl from '@mui/joy/FormControl';
 import Textarea from '@mui/joy/Textarea';
-import { IconButton, Stack } from '@mui/joy';
+import { Stack } from '@mui/joy';
 
-import FormatBoldRoundedIcon from '@mui/icons-material/FormatBoldRounded';
-import FormatItalicRoundedIcon from '@mui/icons-material/FormatItalicRounded';
-import StrikethroughSRoundedIcon from '@mui/icons-material/StrikethroughSRounded';
-import FormatListBulletedRoundedIcon from '@mui/icons-material/FormatListBulletedRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 
 export type MessageInputProps = {
-  textAreaValue: string;
-  setTextAreaValue: (value: string) => void;
-  onSubmit: () => void;
+  ws: WebSocket | null;
+  addMessage: (message: { message: string; connection_id: string }) => void;
 };
 
-export default function MessageInput(props: MessageInputProps) {
-  const { textAreaValue, setTextAreaValue, onSubmit } = props;
+export default function MessageInput({ ws, addMessage }: MessageInputProps) {
+  const [textAreaValue, setTextAreaValue] = React.useState('');
   const textAreaRef = React.useRef<HTMLDivElement>(null);
-  const handleClick = () => {
-    if (textAreaValue.trim() !== '') {
-      onSubmit();
+
+  const handleSubmit = () => {
+    if (ws && textAreaValue.trim() !== '') {
+      ws.send(textAreaValue);
+      addMessage({ message: textAreaValue, connection_id: 'local' });
       setTextAreaValue('');
     }
   };
+
   return (
     <Box sx={{ px: 2, pb: 3 }}>
       <FormControl>
@@ -54,26 +52,13 @@ export default function MessageInput(props: MessageInputProps) {
                 borderColor: 'divider',
               }}
             >
-              <div>
-                <IconButton size="sm" variant="plain" color="neutral">
-                  <FormatBoldRoundedIcon />
-                </IconButton>
-                <IconButton size="sm" variant="plain" color="neutral">
-                  <FormatItalicRoundedIcon />
-                </IconButton>
-                <IconButton size="sm" variant="plain" color="neutral">
-                  <StrikethroughSRoundedIcon />
-                </IconButton>
-                <IconButton size="sm" variant="plain" color="neutral">
-                  <FormatListBulletedRoundedIcon />
-                </IconButton>
-              </div>
+              <div />
               <Button
                 size="sm"
                 color="primary"
                 sx={{ alignSelf: 'center', borderRadius: 'sm' }}
                 endDecorator={<SendRoundedIcon />}
-                onClick={handleClick}
+                onClick={handleSubmit}
               >
                 Send
               </Button>
@@ -81,7 +66,7 @@ export default function MessageInput(props: MessageInputProps) {
           }
           onKeyDown={(event) => {
             if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-              handleClick();
+              handleSubmit();
             }
           }}
           sx={{
