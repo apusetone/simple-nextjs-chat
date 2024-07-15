@@ -24,9 +24,18 @@ This project is a WebSocket chat client built using various modern web technolog
 │   │   ├── page.module.css
 │   │   └── page.tsx
 │   ├── components
-│   │   └── ChatForm.tsx
-│   └── stores
-│       └── chatStore.ts
+│   │   ├── ChatBubble.tsx
+│   │   ├── ChatListItem.tsx
+│   │   ├── ColorSchemeToggle.tsx
+│   │   ├── MessageInput.tsx
+│   │   ├── MessagesPane.tsx
+│   │   ├── MuiLogo.tsx
+│   │   └── MyMessages.tsx
+│   ├── data.ts
+│   ├── stores
+│   │   └── chatStore.ts
+│   ├── types.ts
+│   └── utils.ts
 └── tsconfig.json
 ```
 
